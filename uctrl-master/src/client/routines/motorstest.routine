@@ -1,0 +1,12 @@
+[grp]
+desc=Motors On/off every 1 min
+
+[1]
+desc=Motors on
+cmd=S|1|2|1111
+crontab=0/2 * * * *
+
+[2]
+desc=Turn motors forward again at medium speed
+cmd=S|3|2|1111
+crontab=1/2 * * * *

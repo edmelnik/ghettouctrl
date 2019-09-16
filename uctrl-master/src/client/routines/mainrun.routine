@@ -1,0 +1,12 @@
+[grp]
+desc=Run system every 4 hours for 15 mins from 6am-12am
+
+[1]
+desc=Motors on, reverse (suck), full speed
+cmd=S|2|3|1111
+crontab=0 7-23/4 * * *
+
+[2]
+desc=Motors off
+cmd=S|3|3|1111
+crontab=15 7-23/4 * * *

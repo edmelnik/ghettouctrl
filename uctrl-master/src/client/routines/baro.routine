@@ -1,0 +1,7 @@
+[grp]
+desc=Get barometer pressure every 4 hours between 6am-12am
+
+[1]
+desc=Get baro pressure
+cmd=10|0|30016|1111
+crontab=0 6-23/4 * * *

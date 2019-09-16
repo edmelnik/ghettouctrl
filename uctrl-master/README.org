@@ -1,0 +1,6 @@
+#+STARTUP: indent content
+* Microcontroller firmware
+- Multiple sensor data acquisition using TWI
+- See folder docs
+
+

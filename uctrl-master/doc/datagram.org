@@ -1,0 +1,39 @@
+#+STARTUP: indent content
+#+OPTIONS: html-postamble:nil author:nil date:nil H:4
+#+TITLE: Datagram Specifications
+
+* Overview
+- Datagrams are binary commands to the microcontroller that are 12 bytes long
+- Bytes must be (hexadecimal) big endian 0-padded
+* Binary command format
+|-------+-----------------|
+| Bytes | Meaning         |
+|-------+-----------------|
+|     2 | Command ID      |
+|     1 | Read/Write Byte |
+|     4 | Register        |
+|     4 | Data            |
+|     1 | Checksum        |
+|-------+-----------------|
+* Checksum
+Checksum is calculated as follows:
+- Sum all bytes in the datagram (total: 11 bytes)
+- Modulo the above sum by 16
+- The hex representation of the resulting integer is the checksum
+* Speed dial
+- In non-bridge (speed dial) mode, RW and register bytes may be ignored - see speed dial commands for specifics
+|----------------------------+------------+----+----------+------+---------------------|
+| Meaning                    | Comamnd ID | RW | Register | Data | Checksum            |
+|----------------------------+------------+----+----------+------+---------------------|
+| Calibration                |          1 | X  | X        | nBH  | Calculated as above |
+| Sensor OFF                 |          2 | X  | X        | nBH  | Calculated as above |
+| Sensor ON                  |          3 | X  | X        | nBH  | Calculated as above |
+| Sensor TOGGLE              |          4 | X  | X        | nBH  | Calculated as above |
+| Register dump for n cycles |          5 | X  | n        | nbh  | Calculated as above |
+|----------------------------+------------+----+----------+------+---------------------|
+* Bridge mode
+Command ID 10 (hex a) is bridge mode command (for now). In bridge mode:
+- If RW byte is 0, a read operation is assumed - register bytes should correspond to the 300xx or 400xx register to be read and data bytes should be a n-bit hex value (nBH) corresponding to which sensors are to be read. Ex. if sensors 1, 2 and 4 are to be read, the 4 bit value is 1101, whose hex representation is "D" - hence "D" should be sent for data bytes
+- If RW byte is >=1, a write operation is assumed - register value should correspond to the 400xx register to be written, and data value is the data to be written. RW byte should be a n-bit hex value (nBH) corresponding to which sensors are to be written (same as above)
+** Recommendations
+ 1. It is not recommended to use the bridge mode to turn O2 sensors off. If the user /must/ use the bridge mode for this purpose, they should be aware that the /only/ way for the sensors to be turned on again after being turned off via bridge mode is by a manual turn on from bridge mode (and not speed dial)

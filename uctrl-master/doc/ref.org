@@ -1,0 +1,103 @@
+#+STARTUP: indent content
+#+OPTIONS: html-postamble:nil author:nil date:nil H:4
+#+TITLE: Specifications for microcontroller prototype
+
+* Overview
+- Documented here are the specifications for upstream data flow and downstream command flow from the microcontroller
+- Reference implementations of clients adhering to these specs are provided where possible
+- This document will change multiple times as prototype development progresses
+* Upstream sensor data
+** Type
+- The microcontroller outputs *serial* data at *9600 baud*
+** Data specs
+- Data output from microcontroller is agnostic of the type of sensors connected to it
+- If the microcontroller is configured to output =n= datapoints per cycle, the format for a single line of output will be
+
+  =TAG D_1 D_2 [...] D_n [EOL]=
+
+  where each /D_i/ is a datapoint and is seperated from other datapoints by a whitespace. The line will be terminated by a standard end-of-line terminator
+- Each datapoint /D_i/ is the datapoint corresponding to sensor /i/ attached to the microcontroller
+- Each datapoint /D_i/ is a utf-8 encoded 4-byte value
+- In the event that a single microcontroller is configured to receive simultaneous input from different types of sensors, the data output format will be
+
+  =TAG D_1 D_2 [...] D_n [EOL]=
+
+  Where =TAG= is a 3-byte value that indicates the type of sensors corresponding to the datapoints. The possible values of =TAG= are listed in 2.2.1
+*** Datapoint =TAG= values
+|-----+---------------------------|
+| TAG | Meaning                   |
+|-----+---------------------------|
+| OXY | Oxygen sensor data        |
+| O10 | Oxygen bridge mode output |
+| PRS | Pressure sensor data      |
+|-----+---------------------------|
+*** Datapoint =TAG O10= formats
+- For datapoints with tag =O10=, the output has a unique format:
+  
+  =TAG R/W S1 S2 ... Sn=
+
+  where the second byte (=R/w=) is a 1-byte value that can either be =R= or =W=, corresponding to whether the datapoint is a bridge mode read output or a bridge mode write output respectively, and each /Si/ is the output for sensor /i/
+- If the value of =R/W= byte is =R=, the outputs /Si/ take the format:
+  
+  =ID|REG|VALUE=
+
+  where
+  - =ID= is the sensor ID corresponding to /i/
+  - =REG= is a register number
+  - =VALUE= is the value read from the register
+- If the value of =R/W= byte is =W=, the outputs /Si/ take the format:
+
+  =ID|REG|DATA|SUCCESS=
+
+  where 
+  - =ID= is the sensor ID corresponding to /i/
+  - =REG= is a register number
+  - =DATA= is the data written to the register
+  - =SUCCESS= corresponds to the success/failure of the write operations
+- =SUCCESS= byte is a 1 byte numeric value that is 0 on successful write, or a number /i < 0/ on failure. The absolute value of /i/ corresponds to /ERRi/ error numbers in the table in 2.3.1
+** Non-numeric codes
+- Microcontroller outputs status and error messages particular to the different sensor types
+*** Oxygen
+|-------+------------------------------------------------|
+| /     | <>                                             |
+|-------+------------------------------------------------|
+| Value | Description                                    |
+|-------+------------------------------------------------|
+| ERR1  | Invalid response slave ID exception            |
+| ERR2  | Invalid response function exception            |
+| ERR3  | Response timed out exception                   |
+| ERR4  | Invalid response CRC exception                 |
+| ERR5  | Modbus protocol illegal function exception     |
+| ERR6  | Modbus protocol illegal data address exception |
+| ERR7  | Modbus protocol illegal data value exception   |
+| ERR8  | Modbus protocol device failure                 |
+| STS0  | Sensor idle status                             |
+| STS1  | Sensor startup status                          |
+| STS2  | Sensor active status                           |
+| STS3  | Sensor shutdown status                         |
+| STS4  | Sensor standby status                          |
+| CAL0  | Calibration idle status                        |
+| CAL1  | Calibration in progress                        |
+| CAL2  | Calibration complete status                    |
+|-------+------------------------------------------------|
+*** Pressure
+|-------+-------------------------------|
+| /     | <>                            |
+|-------+-------------------------------|
+| Value | Description                   |
+|-------+-------------------------------|
+| ERR1  | Sensor in command mode error  |
+| ERR2  | Stale data error              |
+| ERR3  | Sensor diagnostic fault error |
+| ERR4  | Sensor missing error          |
+|-------+-------------------------------|
+** Reference implementation
+- It is recommended that the data is timestamped on the data node responsible for receiving data from the microcontroller
+- Reference implementation of upstream communication client can be found in [[https://github.com/adkian/uctrl/blob/master/src/client/client.py][src/client/client.py]]
+* Downstream commands
+** Oxygen sensors
+- See supporting doc datagram.org
+** Pressure sensors
+- The pressure sensors do not support any commands
+** Reference implementation
+- Reference implementation of the downstream command client can be found in [[https://github.com/adkian/uctrl/blob/master/src/client/datagram.py][src/client/datagram.py]]

@@ -1,0 +1,27 @@
+[grp]
+desc=Oxy sensors continuous health checks
+
+[1]
+desc=Poll o2avg every 1 minute from 6am-11pm
+cmd=10|0|30001|1111
+crontab=* 6-23 * * *
+
+[2]
+desc=Poll asymmetry every 1 minute from 6am-11pm
+cmd=10|0|30003|1111
+crontab=* 6-23 * * *
+
+[3]
+desc=Poll errors every 5 minutes from 6am-11pm
+cmd=10|0|30005|1111
+crontab=*/5 6-23 * * *
+
+[4]
+desc=Poll heater voltage every 1 minute from 6am-11pm
+cmd=10|0|30006|1111
+crontab=* 6-23 * * *
+
+[5]
+desc=Poll pressure sensor temp every 1 minute from 6am-11pm
+cmd=10|0|30017|1111
+crontab=* 6-23 * * *

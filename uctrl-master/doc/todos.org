@@ -1,0 +1,49 @@
+#+STARTUP: indent content
+
+* O2
+** TODO FEATURE MINOR String construction in getVal() should be optimized
+- Base strings should be global and in progmem, these strings should be copied as needed in getVal
+** DONE BUGFIX MAJOR Calibration routine falters when a single sensor is calibrated
+- This is bad because if unexpected sensors are calibrated, they will not necessarily have the pumps in the correct direction 
+- Two possible explanations
+  - Calibration =mark= not being reset in microcontroller O2 code
+  - Microcontroller is not clearing the serial recieve buffer, leading to stale data being read again 
+** DONE FEATURE MEDIUM Manual powering ON/OFF for o2 sensors
+- This is not supported in o2: add a flag (perhaps by just generalizing =cal_mark=) that indicates that a sensor has been manually turned off
+- Also need to add relevant code in calibrate.py to handle this
+* Client
+** TODO BUGFIX MEDIUM Client needs to actually timeout
+- Client currently does not timeout while reading serial data, only if it gets 0 datapoints
+  - This behavior was specific to certain issues with the pressure sensors
+- Client should timeout when reading data from device
+  - Check for a pyserial feature that returns something on tiemout
+** TODO FEATURE MEDIUM Client should check DOA status of output threads
+- Similar to check delay in the microcontroller code
+- If threads are dead, run them again
+** DONE FEATURE MINOR Try/catch blocks for calibrate
+- Calibrate needs to do its thing forever: catch errors and continue
+** DONE FEATURE MAJOR Client should not block if one of the output modules block
+- This can happen when, for example, network drops and influx times out. Client should not block in this case
+- =sendData= for each output module should run in its own thread
+  - Instantiate a =queue= for each thread
+  - Thread will block on =queue.get()=
+  - If output is configured in conf, the main thread will push data into the output's queue 
+** DONE Add logging of errors and other messages (TIMEOUT, connecting to device on address)
+** DONE Now that oxygen is connected and works, this script (especially the errors) should be generalized to input and output arbitrary sensor data
+** DONE Find the reason for periodic timeouts - for some reason communication seems to stop and the port needs to be restarted in order for it to work
+ - This seems to be related with the number of devices the microcontroller is serving
+ - Solved: this was due to buffer overflows on the microcontroller
+** DONE Inspect why error numbers ERR* seem to periodically disappear (itoa problem?)
+** DONE A better way of reading what to do with the collected datapoints might be to have a config file in the same directory as this script: the config can allow various operations
+  - print data to STDOUT
+  - push data to zigbee
+  - put data into SQL/Influx
+  - put data into a csv file
+  The output data format could also be specified in the config
+  The source for each of these actions should be outside this file and imported by this file using ConfigParser (catch errors if import fails)
+** DONE Add timestamps to data
+** DONE if ACM0 does no exist, catch that exception and try other ttyACM*
+** DONE ignore all recieved data for the first 2 seconds
+* Pressure
+** TODO BUGFIX MAJOR Pressure values are not correct
+- Likely an error with the formula used
